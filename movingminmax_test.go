@@ -10,16 +10,55 @@ import (
 	"github.com/notnot/container/deque_int"
 )
 
-//// tests /////////////////////////////////////////////////////////////////////
+const (
+	N = 25
+	W = 5
+)
 
-func TestReference(t *testing.T) {
+var (
+	values       []float32 // input sample values
+	mmins, mmaxs []float32 // reference results
+)
+
+// init initializes the test values and computes and displays the reference
+// results.
+func init() {
+	values = make([]float32, N)
+	mmins = make([]float32, N)
+	mmaxs = make([]float32, N)
+
+	// generate random sample values in [0.0, 1.0)
+	rand.Seed(123)
+	for i := 0; i < N; i++ {
+		values[i] = rand.Float32()
+	}
+
 	fmt.Printf("moving minmax, reference code (offline):\n")
 	MovingMinMax_offline()
 
-	// output results
+	// display results
 	for i := 0; i < N; i++ {
 		fmt.Printf("value[%02d] %.3f : min %.3f, max %.3f\n",
 			i, values[i], mmins[i], mmaxs[i])
+	}
+}
+
+//// tests /////////////////////////////////////////////////////////////////////
+
+func TestReference(t *testing.T) {
+	minmax := New(W)
+	for i := range values {
+		minmax.Update(values[i])
+
+		min := minmax.Min()
+		if min != mmins[i] {
+			t.Errorf("Min() got: %.3f, want: %.3f", min, mmins[i])
+		}
+
+		max := minmax.Max()
+		if max != mmaxs[i] {
+			t.Errorf("Max() got: %.3f, want: %.3f", max, mmaxs[i])
+		}
 	}
 }
 
@@ -31,6 +70,15 @@ func BenchmarkReference(b *testing.B) {
 	}
 }
 
+func BenchmarkMovingMinMax(b *testing.B) {
+	minmax := New(W)
+	for j := 0; j < b.N; j++ {
+		for i := range values {
+			minmax.Update(values[i])
+		}
+	}
+}
+
 //// examples //////////////////////////////////////////////////////////////////
 
 func ExampleEmpty() {
@@ -38,29 +86,6 @@ func ExampleEmpty() {
 }
 
 //// reference code ////////////////////////////////////////////////////////////
-
-const (
-	N = 25
-	W = 5
-)
-
-var (
-	values       []float32
-	mmins, mmaxs []float32 // moving min and max results
-)
-
-func init() {
-	fmt.Printf("initialising sample values...\n")
-
-	values = make([]float32, N)
-	mmins = make([]float32, N)
-	mmaxs = make([]float32, N)
-
-	rand.Seed(123)
-	for i := 0; i < N; i++ {
-		values[i] = rand.Float32()
-	}
-}
 
 func MovingMinMax_offline() {
 	U := deque_int.New() // upper -> indices of maxima
