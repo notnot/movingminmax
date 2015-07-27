@@ -45,7 +45,7 @@ func init() {
 
 //// tests /////////////////////////////////////////////////////////////////////
 
-func TestReference(t *testing.T) {
+func TestMovingMinMax(t *testing.T) {
 	minmax := New(W)
 	for i := range values {
 		minmax.Update(values[i])
