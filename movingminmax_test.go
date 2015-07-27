@@ -52,12 +52,14 @@ func TestReference(t *testing.T) {
 
 		min := minmax.Min()
 		if min != mmins[i] {
-			t.Errorf("Min() got: %.3f, want: %.3f", min, mmins[i])
+			t.Errorf("values[%d] Min() got: %.3f, want: %.3f",
+				i, min, mmins[i])
 		}
 
 		max := minmax.Max()
 		if max != mmaxs[i] {
-			t.Errorf("Max() got: %.3f, want: %.3f", max, mmaxs[i])
+			t.Errorf("values[%d] Max() got: %.3f, want: %.3f",
+				i, max, mmaxs[i])
 		}
 	}
 }

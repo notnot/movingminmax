@@ -43,13 +43,27 @@ func New(w uint) *MovingMinMax {
 	}
 }
 
+// String returns a human readable description of the instance.
 func (m *MovingMinMax) String() string {
 	return fmt.Sprintf("moving min %.3f, max %.3f (%d samples)")
 }
 
 // Update updates the moving statistics with the given sample value.
 func (m *MovingMinMax) Update(value float32) {
-
+	switch {
+	case m.n == 0: // initial minimum and maximum
+		m.min = value
+		m.max = value
+	case m.n < m.w: // absolute minimum and maximum
+		if value < m.min {
+			m.min = value
+		} else if value > m.max {
+			m.max = value
+		}
+	default: // moving minimum and maximum
+		//m.min =
+		//m.max =
+	}
 	m.n++
 }
 
