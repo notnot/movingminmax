@@ -34,10 +34,12 @@ type MovingMinMax struct {
 	up  *deque.Deque
 }
 
-// New returns a new MovingMinMax using a data window of size w.
+// New returns a new MovingMinMax instance using a data window of size w.
 func New(w uint) *MovingMinMax {
 	return &MovingMinMax{
-		w: w,
+		w:  w,
+		lo: deque.New(),
+		up: deque.New(),
 	}
 }
 
@@ -59,9 +61,4 @@ func (m *MovingMinMax) Min() float32 {
 // Max returns the current moving maximum.
 func (m *MovingMinMax) Max() float32 {
 	return m.max
-}
-
-// NSamples returns the number of samples processed.
-func (m *MovingMinMax) NSamples() uint {
-	return m.n
 }
