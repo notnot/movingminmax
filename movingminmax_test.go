@@ -7,6 +7,7 @@ import (
 	"math/rand"
 	"testing"
 
+	"github.com/notnot/container/deque"
 	"github.com/notnot/container/deque_int"
 )
 
@@ -34,7 +35,7 @@ func init() {
 	}
 
 	fmt.Printf("moving minmax, reference code (offline):\n")
-	MovingMinMax_offline()
+	MovingMinMax_offline_a()
 
 	// display results
 	for i := 0; i < N; i++ {
@@ -90,9 +91,15 @@ func TestMovingMax(t *testing.T) {
 
 //// benchmarks ////////////////////////////////////////////////////////////////
 
-func BenchmarkReference(b *testing.B) {
+func BenchmarkReference_a(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		MovingMinMax_offline()
+		MovingMinMax_offline_a()
+	}
+}
+
+func BenchmarkReference_b(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		MovingMinMax_offline_b()
 	}
 }
 
@@ -131,7 +138,8 @@ func ExampleEmpty() {
 
 //// reference code ////////////////////////////////////////////////////////////
 
-func MovingMinMax_offline() {
+// version using deque_int
+func MovingMinMax_offline_a() {
 	U := deque_int.New() // upper -> indices of maxima
 	L := deque_int.New() // lower -> indices of minima
 
@@ -199,6 +207,80 @@ func MovingMinMax_offline() {
 func iExtreme(d *deque_int.Deque, i int) int {
 	if d.Size() > 0 {
 		return d.FrontItem()
+	} else {
+		return i - 1
+	}
+}
+
+// version using generic deque
+func MovingMinMax_offline_b() {
+	U := deque.New() // upper -> indices of maxima
+	L := deque.New() // lower -> indices of minima
+
+	// initial minimum and maximum
+	mmins[0] = values[0]
+	mmaxs[0] = values[0]
+
+	for i := 1; i < len(values); i++ {
+		if i < W {
+			// 'absolute' minimum and maximum
+			if values[i] < mmins[i-1] {
+				mmins[i] = values[i]
+			} else {
+				mmins[i] = mmins[i-1]
+			}
+			if values[i] > mmaxs[i-1] {
+				mmaxs[i] = values[i]
+			} else {
+				mmaxs[i] = mmaxs[i-1]
+			}
+		} else {
+			// 'moving' minimum and maximum
+			mmins[i-1] = values[iExtreme_b(L, i)]
+			mmaxs[i-1] = values[iExtreme_b(U, i)]
+		}
+
+		// update monotonic wedge
+		if values[i] > values[i-1] {
+			L.PushBack(i - 1)
+			if i == W+L.FrontItem().(int) {
+				L.PopFront()
+			}
+			for U.Size() > 0 {
+				if values[i] <= values[U.BackItem().(int)] {
+					if i == W+U.FrontItem().(int) {
+						U.PopFront()
+					}
+					break
+				}
+				U.PopBack()
+			}
+		} else {
+			U.PushBack(i - 1)
+			if i == W+U.FrontItem().(int) {
+				U.PopFront()
+			}
+			for L.Size() > 0 {
+				if values[i] >= values[L.BackItem().(int)] {
+					if i == W+L.FrontItem().(int) {
+						L.PopFront()
+					}
+					break
+				}
+				L.PopBack()
+			}
+		}
+	}
+
+	// final minimum and maximum
+	i := len(values) - 1
+	mmins[i] = values[iExtreme_b(L, i)]
+	mmaxs[i] = values[iExtreme_b(U, i)]
+}
+
+func iExtreme_b(d *deque.Deque, i int) int {
+	if d.Size() > 0 {
+		return d.FrontItem().(int)
 	} else {
 		return i - 1
 	}

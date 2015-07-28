@@ -18,7 +18,7 @@ in real-time contexts.
 package movingminmax
 
 import (
-	"fmt"
+	//"fmt"
 
 	"github.com/notnot/container/deque"
 )
@@ -90,11 +90,11 @@ func NewMovingMin(w uint) *MovingMin {
 }
 
 func (m *MovingMin) Update(value float32) {
-	// delete front item if it is too old
+	// delete front item once it is too old
 	if m.iv.Size() > 0 && m.iv.FrontItem().(_IV).i <= m.n-m.ww {
 		m.iv.PopFront()
 	}
-	// delete items that can't become a minimum
+	// delete items that are too large to become a minimum
 	for m.iv.Size() > 0 && m.iv.BackItem().(_IV).v > value {
 		m.iv.PopBack()
 	}
@@ -134,11 +134,11 @@ func NewMovingMax(w uint) *MovingMax {
 }
 
 func (m *MovingMax) Update(value float32) {
-	// delete front item if it is too old
+	// delete front item once it is too old
 	if m.iv.Size() > 0 && m.iv.FrontItem().(_IV).i <= m.n-m.ww {
 		m.iv.PopFront()
 	}
-	// delete items that can't become a maximum
+	// delete items that are too small to become a maximum
 	for m.iv.Size() > 0 && m.iv.BackItem().(_IV).v < value {
 		m.iv.PopBack()
 	}
