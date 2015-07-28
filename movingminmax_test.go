@@ -46,7 +46,7 @@ func init() {
 //// tests /////////////////////////////////////////////////////////////////////
 
 func TestMovingMinMax(t *testing.T) {
-	minmax := New(W)
+	minmax := NewMovingMinMax(W)
 	for i := range values {
 		minmax.Update(values[i])
 
@@ -64,6 +64,30 @@ func TestMovingMinMax(t *testing.T) {
 	}
 }
 
+func TestMovingMin(t *testing.T) {
+	mmin := NewMovingMin(W)
+	for i := range values {
+		mmin.Update(values[i])
+		min := mmin.Min()
+		if min != mmins[i] {
+			t.Errorf("values[%d] Min() got: %.3f, want: %.3f",
+				i, min, mmins[i])
+		}
+	}
+}
+
+func TestMovingMax(t *testing.T) {
+	mmax := NewMovingMax(W)
+	for i := range values {
+		mmax.Update(values[i])
+		max := mmax.Max()
+		if max != mmaxs[i] {
+			t.Errorf("values[%d] Max() got: %.3f, want: %.3f",
+				i, max, mmaxs[i])
+		}
+	}
+}
+
 //// benchmarks ////////////////////////////////////////////////////////////////
 
 func BenchmarkReference(b *testing.B) {
@@ -73,10 +97,28 @@ func BenchmarkReference(b *testing.B) {
 }
 
 func BenchmarkMovingMinMax(b *testing.B) {
-	minmax := New(W)
+	minmax := NewMovingMinMax(W)
 	for j := 0; j < b.N; j++ {
 		for i := range values {
 			minmax.Update(values[i])
+		}
+	}
+}
+
+func BenchmarkMovingMin(b *testing.B) {
+	mmin := NewMovingMin(W)
+	for j := 0; j < b.N; j++ {
+		for i := range values {
+			mmin.Update(values[i])
+		}
+	}
+}
+
+func BenchmarkMovingMax(b *testing.B) {
+	mmax := NewMovingMax(W)
+	for j := 0; j < b.N; j++ {
+		for i := range values {
+			mmax.Update(values[i])
 		}
 	}
 }

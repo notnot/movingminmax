@@ -1,4 +1,5 @@
 // movingminmax.go, jpad 2015
+
 /*
 Implementation based on the paper:
 
@@ -11,8 +12,8 @@ lemire@acm.org
 */
 
 /*
-Package movingminmax offers a moving minimum-maximum filter that can be used in
-real-time contexts.
+Package movingminmax provides a moving minimum-maximum filter that can be used
+in real-time contexts.
 */
 package movingminmax
 
@@ -28,16 +29,16 @@ import (
 type MovingMinMax struct {
 	min float32
 	max float32
-	w   uint // sample data window width
+	ww  uint // sample data window width
 	n   uint // number of samples processed
 	lo  *deque.Deque
 	up  *deque.Deque
 }
 
-// New returns a new MovingMinMax instance using a data window of size w.
-func New(w uint) *MovingMinMax {
+// NewMovingMinMax returns a new instance using a data window of size w.
+func NewMovingMinMax(w uint) *MovingMinMax {
 	return &MovingMinMax{
-		w:  w,
+		ww: w,
 		lo: deque.New(),
 		up: deque.New(),
 	}
@@ -54,7 +55,7 @@ func (m *MovingMinMax) Update(value float32) {
 	case m.n == 0: // initial minimum and maximum
 		m.min = value
 		m.max = value
-	case m.n < m.w: // absolute minimum and maximum
+	case m.n < m.ww: // absolute minimum and maximum
 		if value < m.min {
 			m.min = value
 		} else if value > m.max {
@@ -75,4 +76,99 @@ func (m *MovingMinMax) Min() float32 {
 // Max returns the current moving maximum.
 func (m *MovingMinMax) Max() float32 {
 	return m.max
+}
+
+//// MovingMin /////////////////////////////////////////////////////////////////
+
+type MovingMin struct {
+	min float32
+	ww  uint         // sample data window width
+	n   uint         // number of samples processed
+	iv  *deque.Deque // indices & values
+}
+
+func NewMovingMin(w uint) *MovingMin {
+	return &MovingMin{
+		ww: w,
+		iv: deque.New(),
+	}
+}
+
+func (m *MovingMin) Update(value float32) {
+	// delete front item if it is too old
+	if m.iv.Size() > 0 && m.iv.FrontItem().(_IV).i <= m.n-m.ww {
+		m.iv.PopFront()
+	}
+	// delete items that can't become a minimum
+	for m.iv.Size() > 0 && m.iv.BackItem().(_IV).v > value {
+		m.iv.PopBack()
+	}
+	m.iv.PushBack(_IV{m.n, value})
+
+	switch {
+	case m.n == 0: // initial minimum
+		m.min = value
+	case m.n < m.ww: // absolute minimum
+		if value < m.min {
+			m.min = value
+		}
+	default: // moving minimum
+		m.min = m.iv.FrontItem().(_IV).v
+	}
+	m.n++
+}
+
+func (m *MovingMin) Min() float32 {
+	return m.min
+}
+
+//// MovingMax /////////////////////////////////////////////////////////////////
+
+type MovingMax struct {
+	max float32
+	ww  uint         // sample data window width
+	n   uint         // number of samples processed
+	iv  *deque.Deque // indices & values
+}
+
+func NewMovingMax(w uint) *MovingMax {
+	return &MovingMax{
+		ww: w,
+		iv: deque.New(),
+	}
+}
+
+func (m *MovingMax) Update(value float32) {
+	// delete front item if it is too old
+	if m.iv.Size() > 0 && m.iv.FrontItem().(_IV).i <= m.n-m.ww {
+		m.iv.PopFront()
+	}
+	// delete items that can't become a maximum
+	for m.iv.Size() > 0 && m.iv.BackItem().(_IV).v < value {
+		m.iv.PopBack()
+	}
+	m.iv.PushBack(_IV{m.n, value})
+
+	switch {
+	case m.n == 0: // initial minimum
+		m.max = value
+	case m.n < m.ww: // absolute minimum
+		if value > m.max {
+			m.max = value
+		}
+	default: // moving minimum
+		m.max = m.iv.FrontItem().(_IV).v
+	}
+	m.n++
+}
+
+func (m *MovingMax) Max() float32 {
+	return m.max
+}
+
+//// _IV ///////////////////////////////////////////////////////////////////////
+
+type _IV struct {
+	i uint    // sample index
+	v float32 // sample value
 }
