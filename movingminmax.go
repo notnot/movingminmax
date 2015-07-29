@@ -21,7 +21,6 @@ import (
 	"github.com/notnot/container/deque"
 )
 
-
 /////////////////////////////////
 // MovingMinMax is an implementation of the algorithm described in the following paper :
 //
@@ -42,10 +41,11 @@ type intfloatnode struct {
 	index uint
 	value float32
 }
+
 func newintfloatnode(i uint, v float32) *intfloatnode {
 	return &intfloatnode{
-		index : i,
-		value : v,
+		index: i,
+		value: v,
 	}
 }
 
@@ -57,13 +57,19 @@ type intfloatqueue struct {
 	size  uint
 }
 
-func newintfloatqueue(size uint) *intfloatqueue {
-	roundeddownsize := size + ^uint(0)
-	if roundeddownsize != size {
-		size = 2 * roundeddownsize
+// generate a power of two that is larger or equal than x 
+func newpoweroftwo(x uint) uint {
+	answer := uint(1)
+	for answer < x { // (is there are faster way to do that?)
+		answer *= 2 // let us prey that this does not overflow
 	}
+	return answer
+}
+
+func newintfloatqueue(size uint) *intfloatqueue {
+	size = newpoweroftwo(size)
 	n := make([]*intfloatnode, size)
-	for i:= uint(0); i < size; i++ {
+	for i := uint(0); i < size; i++ {
 		n[i] = &intfloatnode{}
 	}
 	return &intfloatqueue{
@@ -71,16 +77,15 @@ func newintfloatqueue(size uint) *intfloatqueue {
 		size:  size,
 	}
 }
-func (q *intfloatqueue) push(index uint,  value float32) {
+func (q *intfloatqueue) push(index uint, value float32) {
 	q.nodes[q.tail].index = index
 	q.nodes[q.tail].value = value
 	q.tail = (q.tail + 1) & (q.size - 1)
 	q.count++
 }
 
-
-func (q *intfloatqueue) tailnode()  *intfloatnode {
-	return q.nodes[(q.tail - 1) & (q.size - 1)]
+func (q *intfloatqueue) tailnode() *intfloatnode {
+	return q.nodes[(q.tail+q.size-1)&(q.size-1)]
 }
 
 func (q *intfloatqueue) poptail() *intfloatnode {
@@ -90,8 +95,7 @@ func (q *intfloatqueue) poptail() *intfloatnode {
 	return node
 }
 
-
-func (q *intfloatqueue) prunetail()  {
+func (q *intfloatqueue) prunetail() {
 	q.tail = (q.tail + q.size - 1) & (q.size - 1)
 	q.count--
 }
@@ -106,8 +110,6 @@ func (q *intfloatqueue) pop() *intfloatnode {
 func (q *intfloatqueue) headnode() *intfloatnode {
 	return q.nodes[q.head]
 }
-
-
 
 //// MovingMinMax //////////////////////////////////////////////////////////////
 //
@@ -125,7 +127,7 @@ func (q *intfloatqueue) headnode() *intfloatnode {
 type MovingMinMax struct {
 	min float32
 	max float32
-	n uint // how many values seen
+	n   uint // how many values seen
 	ww  uint // sample data window width
 	lo  *intfloatqueue
 	up  *intfloatqueue
@@ -135,7 +137,7 @@ type MovingMinMax struct {
 func NewMovingMinMax(w uint) *MovingMinMax {
 	return &MovingMinMax{
 		ww: w,
-		n : 0,
+		n:  0,
 		lo: newintfloatqueue(w),
 		up: newintfloatqueue(w),
 	}
@@ -158,14 +160,15 @@ func (m *MovingMinMax) Update(value float32) {
 	}
 	m.up.push(m.n, value)
 	m.lo.push(m.n, value)
-	if m.n == m.ww + m.lo.headnode().index {
+	if m.n == m.ww+m.lo.headnode().index {
 		m.lo.pop()
 	}
-	if m.n == m.ww + m.up.headnode().index {
+	if m.n == m.ww+m.up.headnode().index {
 		m.up.pop()
 	}
 	m.max = m.up.headnode().value
 	m.min = m.lo.headnode().value
+	fmt.Println("val = ", value, " max = ", m.max, " min = ", m.min)
 	m.n = m.n + 1
 }
 
