@@ -19,6 +19,7 @@ package movingminmax
 
 import (
 	"github.com/notnot/container/deque"
+	"fmt"
 )
 
 /////////////////////////////////
