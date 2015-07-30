@@ -56,7 +56,7 @@ func newpoweroftwo(x uint) uint {
 }
 
 func newintfloatqueue(size uint) *intfloatqueue {
-	size = newpoweroftwo(size)
+	size = newpoweroftwo(size + 1)
 	n := make([]*intfloatnode, size)
 	for i := uint(0); i < size; i++ {
 		n[i] = &intfloatnode{}
