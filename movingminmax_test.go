@@ -3,7 +3,7 @@
 package movingminmax
 
 import (
-	"fmt"
+	//"fmt"
 	"math/rand"
 	"testing"
 
@@ -12,8 +12,8 @@ import (
 )
 
 const (
-	N = 25
-	W = 5
+	N = 1000
+	W = 10
 )
 
 var (
@@ -33,38 +33,48 @@ func init() {
 	for i := 0; i < N; i++ {
 		values[i] = rand.Float32()
 	}
+	/*
+		fmt.Printf("moving minmax, reference code (offline), W = %d:\n", W)
+		MovingMinMax_offline_a(W)
 
-	fmt.Printf("moving minmax, reference code (offline):\n")
-	MovingMinMax_offline_a()
-
-	// display results
-	for i := 0; i < N; i++ {
-		fmt.Printf("value[%02d] %.3f : min %.3f, max %.3f\n",
-			i, values[i], mmins[i], mmaxs[i])
-	}
+		// display results
+		for i := 0; i < N; i++ {
+			fmt.Printf("value[%02d] %.3f : min %.3f, max %.3f\n",
+				i, values[i], mmins[i], mmaxs[i])
+		}
+	*/
 }
 
 //// tests /////////////////////////////////////////////////////////////////////
 
 func TestMovingMinMax(t *testing.T) {
-	minmax := NewMovingMinMax(W)
-	for i := range values {
-		minmax.Update(values[i])
+	// test with various window widths
+	for w := uint(1); w < N; w++ {
+		minmax := NewMovingMinMax(w)
+		MovingMinMax_offline_a(int(w))
 
-		min := minmax.Min()
-		if min != mmins[i] {
-			t.Errorf("values[%d] Min() got: %.3f, want: %.3f",
-				i, min, mmins[i])
-		}
+		for i := range values[:len(values)-1] {
+			minmax.Update(values[i])
+			/*
+				fmt.Printf("value[%2d] %.3f : min %.3f, max %.3f\n",
+					i, values[i], minmax.Min(), minmax.Max())
+			*/
+			min := minmax.Min()
+			if min != mmins[i] {
+				t.Errorf("W %d: values[%d] Min() got: %.3f, want: %.3f",
+					w, i, min, mmins[i])
+			}
 
-		max := minmax.Max()
-		if max != mmaxs[i] {
-			t.Errorf("values[%d] Max() got: %.3f, want: %.3f",
-				i, max, mmaxs[i])
+			max := minmax.Max()
+			if max != mmaxs[i] {
+				t.Errorf("W %d: values[%d] Max() got: %.3f, want: %.3f",
+					w, i, max, mmaxs[i])
+			}
 		}
 	}
 }
 
+/*
 func brokenTestMovingMin(t *testing.T) {
 	mmin := NewMovingMin(W)
 	for i := range values {
@@ -76,7 +86,9 @@ func brokenTestMovingMin(t *testing.T) {
 		}
 	}
 }
+*/
 
+/*
 func TestMovingMax(t *testing.T) {
 	mmax := NewMovingMax(W)
 	for i := range values {
@@ -88,18 +100,19 @@ func TestMovingMax(t *testing.T) {
 		}
 	}
 }
+*/
 
 //// benchmarks ////////////////////////////////////////////////////////////////
 
 func BenchmarkReference_a(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		MovingMinMax_offline_a()
+		MovingMinMax_offline_a(W)
 	}
 }
 
 func BenchmarkReference_b(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		MovingMinMax_offline_b()
+		MovingMinMax_offline_b(W)
 	}
 }
 
@@ -139,7 +152,7 @@ func ExampleEmpty() {
 //// reference code ////////////////////////////////////////////////////////////
 
 // version using deque_int
-func MovingMinMax_offline_a() {
+func MovingMinMax_offline_a(w int) {
 	U := deque_int.New() // upper -> indices of maxima
 	L := deque_int.New() // lower -> indices of minima
 
@@ -148,7 +161,7 @@ func MovingMinMax_offline_a() {
 	mmaxs[0] = values[0]
 
 	for i := 1; i < len(values); i++ {
-		if i < W {
+		if i < w {
 			// 'absolute' minimum and maximum
 			if values[i] < mmins[i-1] {
 				mmins[i] = values[i]
@@ -169,12 +182,12 @@ func MovingMinMax_offline_a() {
 		// update monotonic wedge
 		if values[i] > values[i-1] {
 			L.PushBack(i - 1)
-			if i == W+L.FrontItem() {
+			if i == w+L.FrontItem() {
 				L.PopFront()
 			}
 			for U.Size() > 0 {
 				if values[i] <= values[U.BackItem()] {
-					if i == W+U.FrontItem() {
+					if i == w+U.FrontItem() {
 						U.PopFront()
 					}
 					break
@@ -183,12 +196,12 @@ func MovingMinMax_offline_a() {
 			}
 		} else {
 			U.PushBack(i - 1)
-			if i == W+U.FrontItem() {
+			if i == w+U.FrontItem() {
 				U.PopFront()
 			}
 			for L.Size() > 0 {
 				if values[i] >= values[L.BackItem()] {
-					if i == W+L.FrontItem() {
+					if i == w+L.FrontItem() {
 						L.PopFront()
 					}
 					break
@@ -197,7 +210,6 @@ func MovingMinMax_offline_a() {
 			}
 		}
 	}
-
 	// final minimum and maximum
 	i := len(values) - 1
 	mmins[i] = values[iExtreme(L, i)]
@@ -213,7 +225,7 @@ func iExtreme(d *deque_int.Deque, i int) int {
 }
 
 // version using generic deque
-func MovingMinMax_offline_b() {
+func MovingMinMax_offline_b(w int) {
 	U := deque.New() // upper -> indices of maxima
 	L := deque.New() // lower -> indices of minima
 
@@ -222,7 +234,7 @@ func MovingMinMax_offline_b() {
 	mmaxs[0] = values[0]
 
 	for i := 1; i < len(values); i++ {
-		if i < W {
+		if i < w {
 			// 'absolute' minimum and maximum
 			if values[i] < mmins[i-1] {
 				mmins[i] = values[i]
@@ -243,12 +255,12 @@ func MovingMinMax_offline_b() {
 		// update monotonic wedge
 		if values[i] > values[i-1] {
 			L.PushBack(i - 1)
-			if i == W+L.FrontItem().(int) {
+			if i == w+L.FrontItem().(int) {
 				L.PopFront()
 			}
 			for U.Size() > 0 {
 				if values[i] <= values[U.BackItem().(int)] {
-					if i == W+U.FrontItem().(int) {
+					if i == w+U.FrontItem().(int) {
 						U.PopFront()
 					}
 					break
@@ -257,12 +269,12 @@ func MovingMinMax_offline_b() {
 			}
 		} else {
 			U.PushBack(i - 1)
-			if i == W+U.FrontItem().(int) {
+			if i == w+U.FrontItem().(int) {
 				U.PopFront()
 			}
 			for L.Size() > 0 {
 				if values[i] >= values[L.BackItem().(int)] {
-					if i == W+L.FrontItem().(int) {
+					if i == w+L.FrontItem().(int) {
 						L.PopFront()
 					}
 					break

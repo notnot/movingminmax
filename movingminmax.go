@@ -1,17 +1,6 @@
 // movingminmax.go, jpad 2015
 
 /*
-Implementation based on the paper:
-
-STREAMING MAXIMUM-MINIMUM FILTER
-USING NO MORE THAN THREE COMPARISONS PER ELEMENT
-Daniel Lemire
-University of Quebec at Montreal (UQAM),
-UER ST 100 Sherbrooke West, Montreal (Quebec), H2X 3P2 Canada
-lemire@acm.org
-*/
-
-/*
 Package movingminmax provides a moving minimum-maximum filter that can be used
 in real-time contexts.
 */
@@ -19,7 +8,6 @@ package movingminmax
 
 import (
 	"github.com/notnot/container/deque"
-	"fmt"
 )
 
 /////////////////////////////////
@@ -58,7 +46,7 @@ type intfloatqueue struct {
 	size  uint
 }
 
-// generate a power of two that is larger or equal than x 
+// generate a power of two that is larger or equal than x
 func newpoweroftwo(x uint) uint {
 	answer := uint(1)
 	for answer < x { // (is there are faster way to do that?)
@@ -169,7 +157,6 @@ func (m *MovingMinMax) Update(value float32) {
 	}
 	m.max = m.up.headnode().value
 	m.min = m.lo.headnode().value
-	fmt.Println("val = ", value, " max = ", m.max, " min = ", m.min)
 	m.n = m.n + 1
 }
 
