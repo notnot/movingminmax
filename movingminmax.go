@@ -85,8 +85,6 @@ func (m *MovingMinMax) Max() float32 {
 
 // MovingMinMax0 maintains moving minimum-maximum statistics.
 type MovingMinMax0 struct {
-	min float32
-	max float32
 	n   uint // how many values seen
 	ww  uint // sample data window width
 	lo  *intfloatqueue
@@ -105,40 +103,38 @@ func NewMovingMinMax0(w uint) *MovingMinMax0 {
 
 // Update updates the moving statistics with the given sample value.
 func (m *MovingMinMax0) Update(value float32) {
-	if m.up.count > 0 {
-		if value > m.up.tailnode().value {
+	if m.up.nonempty() {
+		if value > m.up.tailvalue() {
 			m.up.prunetail()
-			for (m.up.count > 0) && (value >= m.up.tailnode().value) {
+			for (m.up.nonempty()) && (value >= m.up.tailvalue()) {
 				m.up.prunetail()
 			}
 		} else {
 			m.lo.prunetail()
-			for (m.lo.count > 0) && (value <= m.lo.tailnode().value) {
+			for (m.lo.nonempty()) && (value <= m.lo.tailvalue()) {
 				m.lo.prunetail()
 			}
 		}
 	}
 	m.up.push(m.n, value)
+	if m.n == m.ww + m.up.headindex() {
+		m.up.prunehead()
+	}
 	m.lo.push(m.n, value)
-	if m.n == m.ww+m.lo.headnode().index {
-		m.lo.pop()
+	if m.n == m.ww + m.lo.headindex() {
+		m.lo.prunehead()
 	}
-	if m.n == m.ww+m.up.headnode().index {
-		m.up.pop()
-	}
-	m.max = m.up.headnode().value
-	m.min = m.lo.headnode().value
 	m.n = m.n + 1
 }
 
 // Min returns the current moving minimum.
 func (m *MovingMinMax0) Min() float32 {
-	return m.min
+	return m.lo.headvalue()
 }
 
 // Max returns the current moving maximum.
 func (m *MovingMinMax0) Max() float32 {
-	return m.max
+	return m.up.headvalue()
 }
 
 //// MovingMin /////////////////////////////////////////////////////////////////
