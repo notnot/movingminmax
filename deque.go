@@ -69,6 +69,7 @@ func (d *deque_IV) PopBack() *_IV {
 	return d.items[d.back]
 }
 
+
 func (d *deque_IV) PruneBack() {
 	d.size--
 	d.back--
@@ -108,55 +109,81 @@ type intfloatqueue struct {
 	nodes []*intfloatnode
 	head  uint
 	tail  uint
-	count uint
-	size  uint
+	mask  uint
 }
 
 func newintfloatqueue(size uint) *intfloatqueue {
 	size = nextPowerOfTwo(size + 1)
 	n := make([]*intfloatnode, size)
-	for i := uint(0); i < size; i++ {
+	for i:= range n {
 		n[i] = &intfloatnode{}
 	}
 	return &intfloatqueue{
 		nodes: n,
-		size:  size,
+		mask:  size - 1,
 	}
+}
+
+func (q *intfloatqueue) empty() bool {
+	return q.tail == q.head
+}
+
+func (q *intfloatqueue) nonempty() bool {
+	return q.tail != q.head
+}
+
+
+func (q *intfloatqueue) count() uint {
+	return (q.tail-q.head) & q.mask
 }
 
 func (q *intfloatqueue) push(index uint, value float32) {
 	q.nodes[q.tail].index = index
 	q.nodes[q.tail].value = value
-	q.tail = (q.tail + 1) & (q.size - 1)
-	q.count++
+	q.tail = (q.tail + 1) & q.mask
 }
 
 func (q *intfloatqueue) pop() *intfloatnode {
 	node := q.nodes[q.head]
-	q.head = (q.head + 1) & (q.size - 1)
-	q.count--
+	q.head = (q.head + 1) & q.mask
 	return node
 }
 
 func (q *intfloatqueue) tailnode() *intfloatnode {
-	return q.nodes[(q.tail+q.size-1)&(q.size-1)]
+	return q.nodes[(q.tail - 1) & q.mask]
+}
+
+func (q *intfloatqueue) tailvalue() float32 {
+	return q.nodes[(q.tail - 1) & q.mask].value
 }
 
 func (q *intfloatqueue) poptail() *intfloatnode {
-	q.tail = (q.tail + q.size - 1) & (q.size - 1)
+	q.tail = (q.tail - 1) & q.mask
 	node := q.nodes[q.tail]
-	q.count--
 	return node
 }
 
 func (q *intfloatqueue) prunetail() {
-	q.tail = (q.tail + q.size - 1) & (q.size - 1)
-	q.count--
+	q.tail = (q.tail - 1) & q.mask
+}
+
+func (q *intfloatqueue) prunehead() {
+	q.head = (q.head + 1) & q.mask
 }
 
 func (q *intfloatqueue) headnode() *intfloatnode {
 	return q.nodes[q.head]
 }
+
+func (q *intfloatqueue) headindex() uint {
+	return q.nodes[q.head].index
+}
+
+
+func (q *intfloatqueue) headvalue() float32 {
+	return q.nodes[q.head].value
+}
+
 
 type intfloatnode struct {
 	index uint

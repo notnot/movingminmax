@@ -149,14 +149,6 @@ func BenchmarkReference(b *testing.B) {
 	}
 }
 
-func BenchmarkMovingMinMax(b *testing.B) {
-	minmax := NewMovingMinMax(W)
-	for j := 0; j < b.N; j++ {
-		for i := range values {
-			minmax.Update(values[i])
-		}
-	}
-}
 
 func BenchmarkMovingMinMax0(b *testing.B) {
 	minmax := NewMovingMinMax0(W)
@@ -166,6 +158,16 @@ func BenchmarkMovingMinMax0(b *testing.B) {
 		}
 	}
 }
+
+func BenchmarkMovingMinMax(b *testing.B) {
+	minmax := NewMovingMinMax(W)
+	for j := 0; j < b.N; j++ {
+		for i := range values {
+			minmax.Update(values[i])
+		}
+	}
+}
+
 
 func BenchmarkMovingMin(b *testing.B) {
 	mmin := NewMovingMin(W)
