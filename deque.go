@@ -5,7 +5,6 @@ package movingminmax
 //// deque_IV //////////////////////////////////////////////////////////////////
 
 // TODO: compare variant: items []_IV
-// TODO: see if d.mask is faster than (d.capacity - 1)
 
 // deque_IV is a bounded deque with a fixed capacity, implemented as a
 // power-of-two sized ring buffer for efficient wrapping around of the front
