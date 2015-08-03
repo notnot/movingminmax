@@ -53,10 +53,7 @@ func TestMovingMinMax(t *testing.T) {
 
 		for i := range values[:len(values)-1] {
 			minmax.Update(values[i])
-			/*
-				fmt.Printf("value[%2d] %.3f : min %.3f, max %.3f\n",
-					i, values[i], minmax.Min(), minmax.Max())
-			*/
+
 			min := minmax.Min()
 			if min != mmins[i] {
 				t.Errorf("W %d: values[%d] Min() got: %.3f, want: %.3f",
@@ -80,10 +77,7 @@ func TestMovingMinMax0(t *testing.T) {
 
 		for i := range values[:len(values)-1] {
 			minmax.Update(values[i])
-			/*
-				fmt.Printf("value[%2d] %.3f : min %.3f, max %.3f\n",
-					i, values[i], minmax.Min(), minmax.Max())
-			*/
+
 			min := minmax.Min()
 			if min != mmins[i] {
 				t.Errorf("W %d: values[%d] Min() got: %.3f, want: %.3f",
@@ -107,10 +101,7 @@ func TestMovingMin(t *testing.T) {
 
 		for i := range values[:len(values)-1] {
 			mmin.Update(values[i])
-			/*
-				fmt.Printf("value[%2d] %.3f : min %.3f\n",
-					i, values[i], mmin.Min()
-			*/
+
 			min := mmin.Min()
 			if min != mmins[i] {
 				t.Errorf("values[%d] Min() got: %.3f, want: %.3f",
@@ -128,16 +119,49 @@ func TestMovingMax(t *testing.T) {
 
 		for i := range values[:len(values)-1] {
 			mmax.Update(values[i])
-			/*
-				fmt.Printf("value[%2d] %.3f : max %.3f\n",
-					i, values[i], mmax. Max()
-			*/
+
 			max := mmax.Max()
 			if max != mmaxs[i] {
 				t.Errorf("values[%d] Max() got: %.3f, want: %.3f",
 					i, max, mmaxs[i])
 			}
 		}
+	}
+}
+
+func TestDequePushPop(t *testing.T) {
+	deque := newDeque_IV(10)
+	iv1 := _IV{1, 1.0}
+	iv2 := _IV{2, 2.0}
+
+	deque.PushFront(iv1.i, iv1.v)
+	deque.PushBack(iv2.i, iv2.v)
+
+	item := deque.PopFront()
+	if *item != iv1 {
+		t.Errorf("got: %v, want: %v", item, iv1)
+	}
+	item = deque.PopBack()
+	if *item != iv2 {
+		t.Errorf("got: %v, want: %v", item, iv2)
+	}
+}
+
+func TestDequeFrontBackItem(t *testing.T) {
+	deque := newDeque_IV(10)
+	iv1 := _IV{1, 1.0}
+	iv2 := _IV{2, 2.0}
+
+	deque.PushFront(iv1.i, iv1.v)
+	deque.PushBack(iv2.i, iv2.v)
+
+	front := deque.FrontItem()
+	if *front != iv1 {
+		t.Errorf("got: %v, want: %v", front, iv1)
+	}
+	back := deque.BackItem()
+	if *back != iv2 {
+		t.Errorf("got: %v, want: %v", back, iv2)
 	}
 }
 
@@ -148,7 +172,6 @@ func BenchmarkReference(b *testing.B) {
 		MovingMinMax_offline(W)
 	}
 }
-
 
 func BenchmarkMovingMinMax0(b *testing.B) {
 	minmax := NewMovingMinMax0(W)
@@ -167,7 +190,6 @@ func BenchmarkMovingMinMax(b *testing.B) {
 		}
 	}
 }
-
 
 func BenchmarkMovingMin(b *testing.B) {
 	mmin := NewMovingMin(W)
