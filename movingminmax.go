@@ -24,12 +24,10 @@ import (
 
 // MovingMinMax maintains moving minimum-maximum statistics.
 type MovingMinMax struct {
-	min float32
-	max float32
-	ww  uint // window width
-	n   uint // number of samples processed
-	lo  *deque_IV
-	up  *deque_IV
+	ww uint // window width
+	n  uint // number of samples processed
+	lo *deque_IV
+	up *deque_IV
 }
 
 // NewMovingMinMax returns a new instance using a data window of size w.
@@ -57,38 +55,36 @@ func (m *MovingMinMax) Update(value float32) {
 		}
 	}
 
-	m.up.PushBack(m.n, value)
 	m.lo.PushBack(m.n, value)
+	m.up.PushBack(m.n, value)
 
 	if m.n == m.ww+m.lo.FrontItem().i {
-		m.lo.PopFront()
+		m.lo.PruneFront()
 	}
 	if m.n == m.ww+m.up.FrontItem().i {
-		m.up.PopFront()
+		m.up.PruneFront()
 	}
-	m.max = m.up.FrontItem().v
-	m.min = m.lo.FrontItem().v
 	m.n++
 }
 
 // Min returns the current moving minimum.
 func (m *MovingMinMax) Min() float32 {
-	return m.min
+	return m.lo.FrontItem().v
 }
 
 // Max returns the current moving maximum.
 func (m *MovingMinMax) Max() float32 {
-	return m.max
+	return m.up.FrontItem().v
 }
 
 //// MovingMinMax0 /////////////////////////////////////////////////////////////
 
 // MovingMinMax0 maintains moving minimum-maximum statistics.
 type MovingMinMax0 struct {
-	n   uint // how many values seen
-	ww  uint // sample data window width
-	lo  *intfloatqueue
-	up  *intfloatqueue
+	n  uint // how many values seen
+	ww uint // sample data window width
+	lo *intfloatqueue
+	up *intfloatqueue
 }
 
 // NewMovingMinMax0 returns a new instance using a data window of size w.
@@ -117,11 +113,11 @@ func (m *MovingMinMax0) Update(value float32) {
 		}
 	}
 	m.up.push(m.n, value)
-	if m.n == m.ww + m.up.headindex() {
+	if m.n == m.ww+m.up.headindex() {
 		m.up.prunehead()
 	}
 	m.lo.push(m.n, value)
-	if m.n == m.ww + m.lo.headindex() {
+	if m.n == m.ww+m.lo.headindex() {
 		m.lo.prunehead()
 	}
 	m.n = m.n + 1
@@ -141,11 +137,9 @@ func (m *MovingMinMax0) Max() float32 {
 
 // MovingMin maintains moving minimum statistics.
 type MovingMin struct {
-	min float32
-	max float32
-	ww  uint // sample data window width
-	n   uint // number of samples processed
-	lo  *deque_IV
+	ww uint // sample data window width
+	n  uint // number of samples processed
+	lo *deque_IV
 }
 
 // NewMovingMin returns a new instance using a data window of size w.
@@ -168,25 +162,23 @@ func (m *MovingMin) Update(value float32) {
 	m.lo.PushBack(m.n, value)
 
 	if m.n == m.ww+m.lo.FrontItem().i {
-		m.lo.PopFront()
+		m.lo.PruneFront()
 	}
-	m.min = m.lo.FrontItem().v
 	m.n++
 }
 
 // Min returns the current moving minimum.
 func (m *MovingMin) Min() float32 {
-	return m.min
+	return m.lo.FrontItem().v
 }
 
 //// MovingMax /////////////////////////////////////////////////////////////////
 
 // MovingMax maintains moving maximum statistics.
 type MovingMax struct {
-	max float32
-	ww  uint // sample data window width
-	n   uint // number of samples processed
-	up  *deque_IV
+	ww uint // sample data window width
+	n  uint // number of samples processed
+	up *deque_IV
 }
 
 // NewMovingMax returns a new instance using a data window of size w.
@@ -209,15 +201,14 @@ func (m *MovingMax) Update(value float32) {
 	m.up.PushBack(m.n, value)
 
 	if m.n == m.ww+m.up.FrontItem().i {
-		m.up.PopFront()
+		m.up.PruneFront()
 	}
-	m.max = m.up.FrontItem().v
 	m.n++
 }
 
 // Max returns the current moving maximum.
 func (m *MovingMax) Max() float32 {
-	return m.max
+	return m.up.FrontItem().v
 }
 
 //// _IV ///////////////////////////////////////////////////////////////////////
