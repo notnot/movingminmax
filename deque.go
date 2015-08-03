@@ -4,8 +4,6 @@ package movingminmax
 
 //// deque_IV //////////////////////////////////////////////////////////////////
 
-// TODO: compare variant: items []_IV
-
 // deque_IV is a bounded deque with a fixed capacity, implemented as a
 // power-of-two sized ring buffer for efficient wrapping around of the front
 // and back indices.
@@ -25,14 +23,16 @@ func newDeque_IV(capacity uint) *deque_IV {
 	}
 	return &deque_IV{
 		items: items,
+		front: 0,
 		mask:  capacity - 1,
 	}
 }
 
-func (d *deque_IV) PushFront(iv *_IV) {
-	d.items[d.front] = iv
+func (d *deque_IV) PushFront(index uint, value float32) {
 	d.front--
 	d.front &= d.mask
+	d.items[d.front].i = index
+	d.items[d.front].v = value
 	d.size++
 }
 
@@ -44,20 +44,11 @@ func (d *deque_IV) PushBack(index uint, value float32) {
 	d.size++
 }
 
-/*
-func (d *deque_IV) PushBack(iv *_IV) {
-	d.items[d.back] = iv
-
-	d.back = (d.back + 1) & d.mask
-	d.size++
-}
-*/
-
 func (d *deque_IV) PopFront() *_IV {
 	item := d.items[d.front]
+	d.size--
 	d.front++
 	d.front &= d.mask
-	d.size--
 	return item
 }
 
@@ -68,6 +59,11 @@ func (d *deque_IV) PopBack() *_IV {
 	return d.items[d.back]
 }
 
+func (d *deque_IV) PruneFront() {
+	d.size--
+	d.front++
+	d.front &= d.mask
+}
 
 func (d *deque_IV) PruneBack() {
 	d.size--
@@ -114,7 +110,7 @@ type intfloatqueue struct {
 func newintfloatqueue(size uint) *intfloatqueue {
 	size = nextPowerOfTwo(size + 1)
 	n := make([]*intfloatnode, size)
-	for i:= range n {
+	for i := range n {
 		n[i] = &intfloatnode{}
 	}
 	return &intfloatqueue{
@@ -131,9 +127,8 @@ func (q *intfloatqueue) nonempty() bool {
 	return q.tail != q.head
 }
 
-
 func (q *intfloatqueue) count() uint {
-	return (q.tail-q.head) & q.mask
+	return (q.tail - q.head) & q.mask
 }
 
 func (q *intfloatqueue) push(index uint, value float32) {
@@ -149,11 +144,11 @@ func (q *intfloatqueue) pop() *intfloatnode {
 }
 
 func (q *intfloatqueue) tailnode() *intfloatnode {
-	return q.nodes[(q.tail - 1) & q.mask]
+	return q.nodes[(q.tail-1)&q.mask]
 }
 
 func (q *intfloatqueue) tailvalue() float32 {
-	return q.nodes[(q.tail - 1) & q.mask].value
+	return q.nodes[(q.tail-1)&q.mask].value
 }
 
 func (q *intfloatqueue) poptail() *intfloatnode {
@@ -178,11 +173,9 @@ func (q *intfloatqueue) headindex() uint {
 	return q.nodes[q.head].index
 }
 
-
 func (q *intfloatqueue) headvalue() float32 {
 	return q.nodes[q.head].value
 }
-
 
 type intfloatnode struct {
 	index uint
