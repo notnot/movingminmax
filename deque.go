@@ -23,7 +23,6 @@ func newDeque_IV(capacity uint) *deque_IV {
 	}
 	return &deque_IV{
 		items: items,
-		front: 0,
 		mask:  capacity - 1,
 	}
 }
