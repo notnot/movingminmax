@@ -77,62 +77,6 @@ func (m *MovingMinMax) Max() float32 {
 	return m.up.FrontItem().v
 }
 
-//// MovingMinMax0 /////////////////////////////////////////////////////////////
-
-// MovingMinMax0 maintains moving minimum-maximum statistics.
-type MovingMinMax0 struct {
-	n  uint // how many values seen
-	ww uint // sample data window width
-	lo *intfloatqueue
-	up *intfloatqueue
-}
-
-// NewMovingMinMax0 returns a new instance using a data window of size w.
-func NewMovingMinMax0(w uint) *MovingMinMax0 {
-	return &MovingMinMax0{
-		ww: w,
-		n:  0,
-		lo: newintfloatqueue(w),
-		up: newintfloatqueue(w),
-	}
-}
-
-// Update updates the moving statistics with the given sample value.
-func (m *MovingMinMax0) Update(value float32) {
-	if m.up.nonempty() {
-		if value > m.up.tailvalue() {
-			m.up.prunetail()
-			for (m.up.nonempty()) && (value >= m.up.tailvalue()) {
-				m.up.prunetail()
-			}
-		} else {
-			m.lo.prunetail()
-			for (m.lo.nonempty()) && (value <= m.lo.tailvalue()) {
-				m.lo.prunetail()
-			}
-		}
-	}
-	m.up.push(m.n, value)
-	if m.n == m.ww+m.up.headindex() {
-		m.up.prunehead()
-	}
-	m.lo.push(m.n, value)
-	if m.n == m.ww+m.lo.headindex() {
-		m.lo.prunehead()
-	}
-	m.n = m.n + 1
-}
-
-// Min returns the current moving minimum.
-func (m *MovingMinMax0) Min() float32 {
-	return m.lo.headvalue()
-}
-
-// Max returns the current moving maximum.
-func (m *MovingMinMax0) Max() float32 {
-	return m.up.headvalue()
-}
-
 //// MovingMin /////////////////////////////////////////////////////////////////
 
 // MovingMin maintains moving minimum statistics.
@@ -209,6 +153,97 @@ func (m *MovingMax) Update(value float32) {
 // Max returns the current moving maximum.
 func (m *MovingMax) Max() float32 {
 	return m.up.FrontItem().v
+}
+
+//// MovingMean ////////////////////////////////////////////////////////////////
+
+// MovingMean maintains moving mean statistics.
+type MovingMean struct {
+	ww   uint
+	mean float32
+	sum  float32
+	invw float32
+	dq   *deque_f32
+}
+
+// NewMovingMean returns a new instance using a data window of size w.
+func NewMovingMean(w uint) *MovingMean {
+	mmean := MovingMean{
+		ww:   w,
+		invw: 1.0 / float32(w),
+		dq:   newDeque_f32(w),
+	}
+	// init deque
+	mmean.dq.size = w
+	mmean.dq.back = w
+	return &mmean
+}
+
+func (m *MovingMean) Update(value float32) {
+	m.dq.PushFront(value)
+	m.sum -= m.dq.PopBack()
+	m.sum += value
+	m.mean = m.sum * m.invw
+}
+
+func (m *MovingMean) Mean() float32 {
+	return m.mean
+}
+
+//// MovingMinMax0 /////////////////////////////////////////////////////////////
+
+// MovingMinMax0 maintains moving minimum-maximum statistics.
+type MovingMinMax0 struct {
+	n  uint // how many values seen
+	ww uint // sample data window width
+	lo *intfloatqueue
+	up *intfloatqueue
+}
+
+// NewMovingMinMax0 returns a new instance using a data window of size w.
+func NewMovingMinMax0(w uint) *MovingMinMax0 {
+	return &MovingMinMax0{
+		ww: w,
+		n:  0,
+		lo: newintfloatqueue(w),
+		up: newintfloatqueue(w),
+	}
+}
+
+// Update updates the moving statistics with the given sample value.
+func (m *MovingMinMax0) Update(value float32) {
+	if m.up.nonempty() {
+		if value > m.up.tailvalue() {
+			m.up.prunetail()
+			for (m.up.nonempty()) && (value >= m.up.tailvalue()) {
+				m.up.prunetail()
+			}
+		} else {
+			m.lo.prunetail()
+			for (m.lo.nonempty()) && (value <= m.lo.tailvalue()) {
+				m.lo.prunetail()
+			}
+		}
+	}
+	m.up.push(m.n, value)
+	if m.n == m.ww+m.up.headindex() {
+		m.up.prunehead()
+	}
+	m.lo.push(m.n, value)
+	if m.n == m.ww+m.lo.headindex() {
+		m.lo.prunehead()
+	}
+	m.n = m.n + 1
+}
+
+// Min returns the current moving minimum.
+func (m *MovingMinMax0) Min() float32 {
+	return m.lo.headvalue()
+}
+
+// Max returns the current moving maximum.
+func (m *MovingMinMax0) Max() float32 {
+	return m.up.headvalue()
 }
 
 //// _IV ///////////////////////////////////////////////////////////////////////

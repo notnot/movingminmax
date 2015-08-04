@@ -3,7 +3,7 @@
 package movingminmax
 
 import (
-	//"fmt"
+	//	"fmt"
 	"math/rand"
 	"testing"
 
@@ -20,8 +20,7 @@ var (
 	mmins, mmaxs []float32 // reference results
 )
 
-// init initializes the test values and computes and displays the reference
-// results.
+// init initializes the test values.
 func init() {
 	values = make([]float32, N)
 	mmins = make([]float32, N)
@@ -129,6 +128,17 @@ func TestMovingMax(t *testing.T) {
 	}
 }
 
+func TestMovingMean(t *testing.T) {
+	mmean := NewMovingMean(W)
+	for i := range values {
+		mmean.Update(values[i])
+		/*
+			fmt.Printf("values[%2d] %.3f: mean %.3f\n",
+				i, values[i], mmean.Mean())
+		*/
+	}
+}
+
 func TestDequePushPop(t *testing.T) {
 	deque := newDeque_IV(10)
 	iv1 := _IV{1, 1.0}
@@ -209,10 +219,13 @@ func BenchmarkMovingMax(b *testing.B) {
 	}
 }
 
-//// examples //////////////////////////////////////////////////////////////////
-
-func ExampleEmpty() {
-
+func BenchmarkMovingMean(b *testing.B) {
+	mmean := NewMovingMean(W)
+	for j := 0; j < b.N; j++ {
+		for i := range values {
+			mmean.Update(values[i])
+		}
+	}
 }
 
 //// reference code ////////////////////////////////////////////////////////////

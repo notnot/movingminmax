@@ -4,9 +4,9 @@ package movingminmax
 
 //// deque_IV //////////////////////////////////////////////////////////////////
 
-// deque_IV is a bounded deque with a fixed capacity, implemented as a
-// power-of-two sized ring buffer for efficient wrapping around of the front
-// and back indices.
+// deque_IV is a bounded deque with a fixed capacity to store index+value pairs.
+// It is implemented as a power-of-two sized ring buffer for efficient wrapping
+// around of the front and back indices.
 type deque_IV struct {
 	items []*_IV
 	front uint // front item index
@@ -75,12 +75,84 @@ func (d *deque_IV) FrontItem() *_IV {
 }
 
 func (d *deque_IV) BackItem() *_IV {
-	// why so complicated?, why not return d.items[d.back] ?
-	// : the back index is positioned where a new back item will be pushed...
 	return d.items[(d.back-1)&d.mask]
 }
 
 func (d *deque_IV) Size() uint {
+	return d.size
+}
+
+//// deque_f32 /////////////////////////////////////////////////////////////////
+
+// deque_f32 is a bounded deque with a fixed capacity to store float32 values.
+// It is implemented as a power-of-two sized ring buffer for efficient wrapping
+// around of the front and back indices.
+type deque_f32 struct {
+	items []float32
+	front uint // front item index
+	back  uint // back item index
+	size  uint // number of items
+	mask  uint // wrap mask (capacity - 1, where capacity is a power of 2)
+}
+
+func newDeque_f32(capacity uint) *deque_f32 {
+	capacity = nextPowerOfTwo(capacity + 1)
+	return &deque_f32{
+		items: make([]float32, capacity),
+		mask:  capacity - 1,
+	}
+}
+
+func (d *deque_f32) PushFront(value float32) {
+	d.front--
+	d.front &= d.mask
+	d.items[d.front] = value
+	d.size++
+}
+
+func (d *deque_f32) PushBack(value float32) {
+	d.items[d.back] = value
+	d.back++
+	d.back &= d.mask
+	d.size++
+}
+
+func (d *deque_f32) PopFront() float32 {
+	item := d.items[d.front]
+	d.size--
+	d.front++
+	d.front &= d.mask
+	return item
+}
+
+func (d *deque_f32) PopBack() float32 {
+	d.size--
+	d.back--
+	d.back &= d.mask
+	return d.items[d.back]
+}
+
+func (d *deque_f32) PruneFront() {
+	d.size--
+	d.front++
+	d.front &= d.mask
+}
+
+func (d *deque_f32) PruneBack() {
+	d.size--
+	d.back--
+	d.back &= d.mask
+}
+
+func (d *deque_f32) FrontItem() float32 {
+	return d.items[d.front]
+}
+
+func (d *deque_f32) BackItem() float32 {
+	return d.items[(d.back-1)&d.mask]
+}
+
+func (d *deque_f32) Size() uint {
 	return d.size
 }
 
