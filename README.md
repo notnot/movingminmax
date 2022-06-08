@@ -9,3 +9,5 @@ Three Comparisons per Element. Nordic Journal of Computing, 13 (4), pages 328-33
 
 http://arxiv.org/abs/cs/0610046
 
+
+This project is licensed under the terms of the MIT license.
